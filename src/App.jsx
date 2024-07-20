@@ -1,21 +1,24 @@
-import { Header } from './components/Header'
-import { Sidebar } from './components/Sidebar'
-
 import styles from './App.module.css'
 
 import './global.css'
 
-function App() {
-  return (
-    <>
-      <Header />
+import { Header } from './components/Header'
+import { Post } from './components/Post'
+import { Sidebar } from './components/Sidebar'
 
-      <div className={styles.wrapper}>
-        <Sidebar></Sidebar>
-        <main></main>
-      </div>
-    </>
-  )
+function App() {
+    return (
+        <>
+            <Header />
+
+            <div className={styles.wrapper}>
+                <Sidebar></Sidebar>
+                <main>
+                    <Post />
+                </main>
+            </div>
+        </>
+    )
 }
 
 export default App
