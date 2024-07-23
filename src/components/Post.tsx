@@ -3,43 +3,63 @@ import { Avatar } from './Avatar';
 import { Comment } from './Comment';
 import styles from './Post.module.css'
 import { ptBR } from 'date-fns/locale/pt-BR';
-import { useState } from 'react';
+import { ChangeEvent, FormEvent, InvalidEvent, useState } from 'react';
 
-export function Post({ author, content, publishedAt }) {
-    const publishedDateFormated = format(publishedAt, "dd 'de' MMMM 'de' yyyy 'às' HH:mm'h'", { locale: ptBR })
-    const publishedDateRelativeToNow = formatDistanceToNow(publishedAt, {
+interface Author {
+    avatarUrl: string,
+    name: string,
+    role: string,
+}
+
+interface Content {
+    type: ('paragraph' | 'link'),
+    content: string
+}
+
+export interface PostType {
+    id: number,
+    author: Author,
+    content: Content[],
+    publishedAt: Date
+}
+
+interface PostProps {
+    post: PostType
+}
+
+export function Post({ post }: PostProps) {
+    const publishedDateFormated = format(post.publishedAt, "dd 'de' MMMM 'de' yyyy 'às' HH:mm'h'", { locale: ptBR })
+    const publishedDateRelativeToNow = formatDistanceToNow(post.publishedAt, {
         locale: ptBR,
         addSuffix: true
     })
 
-    const [comments, setComments] = useState([]);
+    const [comments, setComments] = useState(['']);
 
     const [newCommentText, setNewCommentText] = useState('');
 
-    function handleCreateNewComment() {
+    function handleCreateNewComment(event: FormEvent) {
         event.preventDefault()
-
-        const newCommentText = event.target.comment.value
 
         setComments([...comments, newCommentText])
         setNewCommentText('')
     }
 
-    function handleNewCommentChange() {
+    function handleNewCommentChange(event: ChangeEvent<HTMLTextAreaElement>) {
         event.target.setCustomValidity("")
         setNewCommentText(event.target.value)
     }
 
-    function deleteComment(commentToDelete) {
+    function handleNewCommentInvalid(event: InvalidEvent<HTMLTextAreaElement>) {
+        event.target.setCustomValidity("Esse campo é obrigatório!")
+    }
+
+    function deleteComment(commentToDelete: String) {
         const commentWithoutDeleteOne = comments.filter(comment => {
             return comment !== commentToDelete
         })
 
         setComments(commentWithoutDeleteOne)
-    }
-
-    function handleNewCommentInvalid() {
-        event.target.setCustomValidity("Esse campo é obrigatório!")
     }
 
     const isNewCommentEmpty = newCommentText.length === 0
@@ -48,22 +68,22 @@ export function Post({ author, content, publishedAt }) {
         <article className={styles.post}>
             <header>
                 <div className={styles.author}>
-                    <Avatar src={author.avatarUrl} />
+                    <Avatar src={post.author.avatarUrl} />
                     <div className={styles.authorInfo}>
-                        <strong>{author.name}</strong>
-                        <span>{author.role}</span>
+                        <strong>{post.author.name}</strong>
+                        <span>{post.author.role}</span>
                     </div>
                 </div>
 
-                <time title={publishedDateFormated} dateTime={publishedAt.toISOString()}>{publishedDateRelativeToNow}</time>
+                <time title={publishedDateFormated} dateTime={post.publishedAt.toISOString()}>{publishedDateRelativeToNow}</time>
             </header>
 
             <div className={styles.content}>
-                {content.map(line => {
+                {post.content.map(line => {
                     if (line.type === 'paragraph') {
                         return <p key={line.content}>{line.content}</p>
                     } else if (line.type === 'link') {
-                        return <p key={line.content}><a href={line.url}>{line.content}</a></p>
+                        return <p key={line.content}><a href="#">{line.content}</a></p>
                     }
                 })}
             </div>
@@ -90,13 +110,11 @@ export function Post({ author, content, publishedAt }) {
 
             <div className={styles.commentList}>
                 {comments.map(comment => {
-                    return <Comment
+                    return comment !== '' ? <Comment
                         key={comment}
                         content={comment}
-                        author={comment.author}
-                        publishedAt={comment.publishedAt}
                         onDeleteComment={deleteComment}
-                    />
+                    /> : null
                 })}
             </div>
         </article>
